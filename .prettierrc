@@ -1,0 +1,7 @@
+{
+    "endOfLine": "auto",
+    "arrowParens": "avoid",
+    "singleQuote": true,
+    "singleAttributePerLine": true
+  }
+  
