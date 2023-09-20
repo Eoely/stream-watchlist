@@ -1,11 +1,4 @@
-export interface MovieSearchResult {
-  movieId: string;
-  streamingContentId: string;
-  title: string;
-  productionYear: string;
-}
-
-export interface Movie {
+export interface ImdbMovie {
   const: string;
   created: string;
   dateRated: string;
@@ -28,4 +21,34 @@ export interface Movie {
 export interface MovieIdentifier {
   title: string;
   year: string;
+}
+
+export interface MovieSearchResult {
+  movieId: string;
+  streamingContentId: string;
+  title: string; //Would be nice to have original title
+  productionYear: string;
+}
+export interface MovieStreamingInfo {
+  id: string;
+  isSeries: boolean;
+  title: string;
+  //OriginalTitle: string; //Not fetched
+  filmwebMovieId: string;
+  imdbId: string;
+  ratingImdb: number;
+  providerContents: ProviderContent[];
+}
+
+interface ProviderContent {
+  id: string;
+  provider: Provider;
+  title: string;
+  url: string;
+}
+
+interface Provider {
+  id: string;
+  logo: string;
+  name: string;
 }

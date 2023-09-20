@@ -11,12 +11,12 @@
 <script setup lang="ts">
 import Papa from 'papaparse';
 import { ref } from 'vue';
-import { Movie, MovieIdentifier } from '../types';
+import { ImdbMovie, MovieIdentifier } from '../types';
 
 const cheatValue: Array<MovieIdentifier> = [
   {
-    title: 'oldboy',
-    year: '2003',
+    title: 'edward saksehånd',
+    year: '1990',
   },
 ];
 
@@ -34,10 +34,11 @@ const onUpload = async (f: any) => {
   if (movies.value.length > 0) {
     emit('completed', movies.value);
   } else {
-    emit('error');
+    emit('error', 'Failed to parse file');
   }
 };
 
+//TODO: Handle special characters. I.e Capernaum = CapharnaÃ¼m when downloaded from imdb
 const getFileData = async (file: Papa.LocalFile): Promise<any> => {
   return new Promise((complete, error) =>
     Papa.parse(file, {
@@ -49,7 +50,7 @@ const getFileData = async (file: Papa.LocalFile): Promise<any> => {
   );
 };
 
-const getMovieIdentifiers = (movieData: Array<Movie>, limit = 10) => {
+const getMovieIdentifiers = (movieData: Array<ImdbMovie>, limit = 10) => {
   return movieData.slice(0, limit).map(movie => ({
     title: movie.title.trim().toLocaleLowerCase(),
     year: movie.year,
@@ -62,8 +63,8 @@ const transformHeaders = (header: string) => {
   return toCamelCase(header);
 };
 
-const toCamelCase = (str: string): string => {
-  return str
+const toCamelCase = (str: string) =>
+  str
     .toLowerCase()
     .trim()
     .split(/\s+/)
@@ -71,5 +72,4 @@ const toCamelCase = (str: string): string => {
       index !== 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word
     )
     .join('');
-};
 </script>

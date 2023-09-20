@@ -4,15 +4,20 @@
   <UploadWatchlist
     v-if="showFileUpload"
     @completed="getFilmWebIds"
+    @error="setError"
   />
 
-  <h3 v-if="error !== ''">{{ error }}</h3>
+  <h3 v-if="error.length === 0">{{ error }}</h3>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import UploadWatchlist from './components/UploadWatchlist.vue';
-import { MovieIdentifier, MovieSearchResult } from './types';
+import {
+  MovieIdentifier,
+  MovieSearchResult,
+  MovieStreamingInfo,
+} from './types';
 
 const error = ref('');
 const showFileUpload = ref(true);
@@ -25,6 +30,31 @@ const getFilmWebIds = async (movies: Array<MovieIdentifier>) => {
   // );
   const movieId = await getFilmWebId(movies[0]);
   console.log('movieId', movieId);
+  if (movieId === undefined) {
+    setError(
+      `Could not find Id for movie: ${movies[0].title} (${movies[0].year})`
+    );
+    return;
+  }
+
+  const movieData = await getMovieStreamingData(movieId);
+
+  if (movieData === undefined) {
+    setError(
+      `Could not find streaming data for movie: ${movies[0].title} (${movies[0].year})`
+    );
+    return;
+  }
+
+  const availableProviders = movieData.providerContents.map(
+    provider => provider.provider.name
+  );
+
+  alert(
+    `${movies[0].title} (${
+      movies[0].year
+    }) is available on: ${availableProviders.join(', ')}`
+  );
 };
 
 //TODO: Somehow await this function better
@@ -32,18 +62,16 @@ const getFilmWebId = async (movie: MovieIdentifier) => {
   const searchResults = await searchForMovie(movie.title);
   console.log('data', searchResults);
 
+  // TODO: Does not account for titles in antoher language, search results are displayed in english
+  // I.e Relatos salvajes (2014) is displayed as Wild Tales (2014), so the search fails
+  // Also sometimes translates english to norwegian, i.e Edvard Scissorhands -> Edvard Saksehand
+  //Q: Does the query for productionyear work for series?
   const movieId = searchResults.find(
     m =>
       m.title.toLocaleLowerCase() === movie.title &&
       m.productionYear === movie.year
   )?.streamingContentId;
 
-  if (!movieId) {
-    setError(`Could not find movie: ${movie.title} (${movie.year})`);
-    return;
-  }
-
-  console.log('movie', movieId);
   return movieId;
 };
 
@@ -52,10 +80,21 @@ const searchForMovie = async (
   limit = 10
 ): Promise<Array<MovieSearchResult>> => {
   const urlSafeName = encodeURIComponent(name);
-  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query%20searchQuery(%24searchText%3A%20String%2C%20%24streamingOnly%3A%20Boolean%2C%20%24maxNumItems%3A%20Int)%20%7B%0A%20%20searchForWatchableContent(searchText%3A%20%24searchText%2C%20streamingOnly%3A%20%24streamingOnly%2C%20maxNumItems%3A%20%24maxNumItems)%20%7B%0A%20%20%20%20movieId%0A%20%20%20%20streamingContentId%0A%20%20%20%20title%0A%20%20%20%20productionYear%0A%20%20%7D%0A%7D&variables=%7B%22searchText%22%3A%22${urlSafeName}%22%2C%22streamingOnly%22%3Afalse%2C%22maxNumItems%22%3A${limit}%7D`;
+  //TODO: format url better to match graphql query
+  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query%20searchQuery(%24searchText%3A%20String%2C%20%24streamingOnly%3A%20Boolean%2C%20%24maxNumItems%3A%20Int)%20%7B%0A%20%20searchForWatchableContent(searchText%3A%20%24searchText%2C%20streamingOnly%3A%20%24streamingOnly%2C%20maxNumItems%3A%20%24maxNumItems)%20%7B%0A%20%20%20%20movieId%0A%20%20%20%20streamingContentId%0A%20%20%20%20title%0A%20%20%20%20title%0A%20%20%20%20productionYear%0A%20%20%7D%0A%7D&variables=%7B%22searchText%22%3A%22${urlSafeName}%22%2C%22streamingOnly%22%3Afalse%2C%22maxNumItems%22%3A${limit}%7D`;
   const response = await fetch(url);
   const { data } = await response.json();
   return data.searchForWatchableContent;
+};
+
+const getMovieStreamingData = async (
+  movieId: string
+): Promise<MovieStreamingInfo> => {
+  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query(%24streamingId%3AInt%2C%24edi%3AString){streamingQuery{getStreamingContent(id%3A%24streamingId%2CmovieId%3A%24edi){id isSeries title filmwebMovieId imdbId ratingImdb providerContents{id provider{id logo name}title url}}}}&variables={"streamingId"%3A${movieId}}`;
+  const response = await fetch(url);
+  const { data } = await response.json();
+  console.log('getMovieStreamingData', data);
+  return data.streamingQuery.getStreamingContent;
 };
 
 const setError = (message: string) => {
