@@ -12,31 +12,31 @@ export interface ImdbMovie {
   releaseDate: string;
   runtime: string;
   title: string;
-  titleType: string;
+  titleType: MovieType;
   url: string;
   year: string;
   yourRating: string;
 }
 
+export enum MovieType {
+  Movie = 'movie',
+  Series = 'tvSeries',
+  MiniSeries = 'tvMiniSeries',
+}
 export interface MovieIdentifier {
   title: string;
-  year: string;
+  imdbId: string;
+  MovieType: MovieType;
 }
 
-export interface MovieSearchResult {
-  movieId: string;
-  streamingContentId: string;
-  title: string; //Would be nice to have original title
-  productionYear: string;
-}
 export interface MovieStreamingInfo {
   id: string;
-  isSeries: boolean;
   title: string;
-  //OriginalTitle: string; //Not fetched
-  filmwebMovieId: string;
   imdbId: string;
+  isSeries: boolean;
+  originalTitle: string;
   ratingImdb: number;
+  year: number; //string?
   providerContents: ProviderContent[];
 }
 

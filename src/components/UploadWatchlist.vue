@@ -11,12 +11,13 @@
 <script setup lang="ts">
 import Papa from 'papaparse';
 import { ref } from 'vue';
-import { ImdbMovie, MovieIdentifier } from '../types';
+import { ImdbMovie, MovieIdentifier, MovieType } from '../types';
 
 const cheatValue: Array<MovieIdentifier> = [
   {
-    title: 'edward saksehånd',
-    year: '1990',
+    title: 'into the wild',
+    imdbId: 'tt0758758',
+    MovieType: MovieType.Movie,
   },
 ];
 
@@ -53,7 +54,8 @@ const getFileData = async (file: Papa.LocalFile): Promise<any> => {
 const getMovieIdentifiers = (movieData: Array<ImdbMovie>, limit = 10) => {
   return movieData.slice(0, limit).map(movie => ({
     title: movie.title.trim().toLocaleLowerCase(),
-    year: movie.year,
+    imdbId: movie.const,
+    MovieType: movie.titleType,
   }));
 };
 

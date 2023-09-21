@@ -3,7 +3,7 @@
   <h2>csv pl0x</h2>
   <UploadWatchlist
     v-if="showFileUpload"
-    @completed="getFilmWebIds"
+    @completed="getStreamingInfo"
     @error="setError"
   />
 
@@ -13,88 +13,61 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import UploadWatchlist from './components/UploadWatchlist.vue';
-import {
-  MovieIdentifier,
-  MovieSearchResult,
-  MovieStreamingInfo,
-} from './types';
+import { MovieIdentifier, MovieStreamingInfo, MovieType } from './types';
 
 const error = ref('');
 const showFileUpload = ref(true);
-const getFilmWebIds = async (movies: Array<MovieIdentifier>) => {
+const getStreamingInfo = async (movies: Array<MovieIdentifier>) => {
   error.value = '';
   showFileUpload.value = false;
   console.log('skjaaa', movies);
-  // const movieIds = await Promise.all(
-  //   movieNames.map(name => getFilmWebIdByName(name))
-  // );
-  const movieId = await getFilmWebId(movies[0]);
-  console.log('movieId', movieId);
-  if (movieId === undefined) {
-    setError(
-      `Could not find Id for movie: ${movies[0].title} (${movies[0].year})`
-    );
-    return;
-  }
-
-  const movieData = await getMovieStreamingData(movieId);
-
-  if (movieData === undefined) {
-    setError(
-      `Could not find streaming data for movie: ${movies[0].title} (${movies[0].year})`
-    );
-    return;
-  }
-
-  const availableProviders = movieData.providerContents.map(
-    provider => provider.provider.name
+  const movieData = await Promise.all(
+    movies.map(movie => getMovieStreamingData(movie))
   );
 
-  alert(
-    `${movies[0].title} (${
-      movies[0].year
-    }) is available on: ${availableProviders.join(', ')}`
-  );
+  let i = 0;
+  for (const movie of movieData) {
+    if (movie) {
+      if (movie.providerContents.length === 0) {
+        console.log(`${movie.title} is not available on any providers`);
+      } else {
+        console.log(
+          `${movie.title} is available on ${movie.providerContents.map(
+            p => p.provider.name
+          )}`
+        );
+      }
+    } else {
+      console.log(`Failed to find ${movies[i].title}`);
+    }
+    i++;
+  }
 };
-
-//TODO: Somehow await this function better
-const getFilmWebId = async (movie: MovieIdentifier) => {
+const getMovieStreamingData = async (
+  movie: MovieIdentifier
+): Promise<MovieStreamingInfo | undefined> => {
   const searchResults = await searchForMovie(movie.title);
-  console.log('data', searchResults);
-
-  // TODO: Does not account for titles in antoher language, search results are displayed in english
-  // I.e Relatos salvajes (2014) is displayed as Wild Tales (2014), so the search fails
-  // Also sometimes translates english to norwegian, i.e Edvard Scissorhands -> Edvard Saksehand
-  //Q: Does the query for productionyear work for series?
-  const movieId = searchResults.find(
-    m =>
-      m.title.toLocaleLowerCase() === movie.title &&
-      m.productionYear === movie.year
-  )?.streamingContentId;
-
-  return movieId;
+  if (movie.MovieType === MovieType.Movie) {
+    return searchResults.find(m => m.imdbId === movie.imdbId);
+  } else {
+    return searchResults.find(
+      m =>
+        m.originalTitle.trim().toLocaleLowerCase() === movie.title && m.isSeries
+    );
+  }
 };
 
 const searchForMovie = async (
   name: string,
   limit = 10
-): Promise<Array<MovieSearchResult>> => {
+): Promise<Array<MovieStreamingInfo>> => {
   const urlSafeName = encodeURIComponent(name);
   //TODO: format url better to match graphql query
-  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query%20searchQuery(%24searchText%3A%20String%2C%20%24streamingOnly%3A%20Boolean%2C%20%24maxNumItems%3A%20Int)%20%7B%0A%20%20searchForWatchableContent(searchText%3A%20%24searchText%2C%20streamingOnly%3A%20%24streamingOnly%2C%20maxNumItems%3A%20%24maxNumItems)%20%7B%0A%20%20%20%20movieId%0A%20%20%20%20streamingContentId%0A%20%20%20%20title%0A%20%20%20%20title%0A%20%20%20%20productionYear%0A%20%20%7D%0A%7D&variables=%7B%22searchText%22%3A%22${urlSafeName}%22%2C%22streamingOnly%22%3Afalse%2C%22maxNumItems%22%3A${limit}%7D`;
+  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query%20searchQuery(%24searchText%3A%20String%2C%20%24numItems%3A%20Int)%20%7B%20streamingQuery%20%7B%20searchForStreamingContent(searchText%3A%20%24searchText%2C%20numItems%3A%20%24numItems)%20%7B%20id%20title%20imdbId%20isSeries%20originalTitle%20ratingImdb%20year%20providerContents%20%7B%20id%20provider%20%7B%20id%20logo%20name%20%7D%20title%20url%20%7D%20%7D%20%7D%20%7D&variables=%7B%22searchText%22%3A%22${urlSafeName}%22%2C%22numItems%22%3A${limit}%7D`;
   const response = await fetch(url);
   const { data } = await response.json();
-  return data.searchForWatchableContent;
-};
 
-const getMovieStreamingData = async (
-  movieId: string
-): Promise<MovieStreamingInfo> => {
-  const url = `https://skynet.filmweb.no/MovieInfoQs/graphql?query=query(%24streamingId%3AInt%2C%24edi%3AString){streamingQuery{getStreamingContent(id%3A%24streamingId%2CmovieId%3A%24edi){id isSeries title filmwebMovieId imdbId ratingImdb providerContents{id provider{id logo name}title url}}}}&variables={"streamingId"%3A${movieId}}`;
-  const response = await fetch(url);
-  const { data } = await response.json();
-  console.log('getMovieStreamingData', data);
-  return data.streamingQuery.getStreamingContent;
+  return data.streamingQuery.searchForStreamingContent;
 };
 
 const setError = (message: string) => {
