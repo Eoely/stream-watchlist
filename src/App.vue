@@ -1,10 +1,15 @@
 <template>
-  <h1>Upload your watchlist below :)</h1>
-  <h2>csv pl0x</h2>
+  <h1>Find out where to stream your movies</h1>
+
   <UploadWatchlist
     v-if="showFileUpload"
     @completed="getStreamingInfo"
     @error="setError"
+  />
+
+  <DisplayResults
+    v-if="results.length > 0"
+    :results="results"
   />
 
   <h3 v-if="error.length === 0">{{ error }}</h3>
@@ -13,36 +18,27 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import UploadWatchlist from './components/UploadWatchlist.vue';
+import DisplayResults from './components/DisplayResults.vue';
 import { MovieIdentifier, MovieStreamingInfo, MovieType } from './types';
 
 const error = ref('');
 const showFileUpload = ref(true);
+const results = ref<Array<MovieStreamingInfo>>([]);
+
 const getStreamingInfo = async (movies: Array<MovieIdentifier>) => {
   error.value = '';
   showFileUpload.value = false;
-  console.log('skjaaa', movies);
   const movieData = await Promise.all(
     movies.map(movie => getMovieStreamingData(movie))
   );
 
-  let i = 0;
-  for (const movie of movieData) {
-    if (movie) {
-      if (movie.providerContents.length === 0) {
-        console.log(`${movie.title} is not available on any providers`);
-      } else {
-        console.log(
-          `${movie.title} is available on ${movie.providerContents.map(
-            p => p.provider.name
-          )}`
-        );
-      }
-    } else {
-      console.log(`Failed to find ${movies[i].title}`);
-    }
-    i++;
-  }
+  movieData.forEach((movie, index) => {
+    movie
+      ? handleFoundMovie(movie)
+      : console.log(`Failed to find ${movies[index].title}`);
+  });
 };
+
 const getMovieStreamingData = async (
   movie: MovieIdentifier
 ): Promise<MovieStreamingInfo | undefined> => {
@@ -68,6 +64,14 @@ const searchForMovie = async (
   const { data } = await response.json();
 
   return data.streamingQuery.searchForStreamingContent;
+};
+
+const handleFoundMovie = (movie: MovieStreamingInfo) => {
+  if (movie.providerContents.length === 0) {
+    console.log(`${movie.title} is not available on any providers`);
+  } else {
+    results.value.push(movie);
+  }
 };
 
 const setError = (message: string) => {

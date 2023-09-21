@@ -1,11 +1,12 @@
 <template>
+  <h2>Upload your IMDB list - csv pl0x</h2>
+
   <input
     @change="onUpload"
     type="file"
   />
 
   <button @click="$emit('completed', cheatValue)">Cheat complete</button>
-  {{ movies }}
 </template>
 
 <script setup lang="ts">
