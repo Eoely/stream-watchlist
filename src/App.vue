@@ -12,6 +12,8 @@
     :results="results"
   />
 
+  <h3 v-if="loading">Loading...</h3>
+
   <h3 v-if="error.length === 0">{{ error }}</h3>
 </template>
 
@@ -24,10 +26,12 @@ import { MovieIdentifier, MovieStreamingInfo, MovieType } from './types';
 const error = ref('');
 const showFileUpload = ref(true);
 const results = ref<Array<MovieStreamingInfo>>([]);
+const loading = ref(false);
 
 const getStreamingInfo = async (movies: Array<MovieIdentifier>) => {
   error.value = '';
   showFileUpload.value = false;
+  loading.value = true;
   const movieData = await Promise.all(
     movies.map(movie => getMovieStreamingData(movie))
   );
@@ -37,6 +41,7 @@ const getStreamingInfo = async (movies: Array<MovieIdentifier>) => {
       ? handleFoundMovie(movie)
       : console.log(`Failed to find ${movies[index].title}`);
   });
+  loading.value = false;
 };
 
 const getMovieStreamingData = async (
