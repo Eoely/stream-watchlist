@@ -30,7 +30,7 @@ export interface MovieIdentifier {
 }
 
 export interface MovieStreamingInfo {
-  id: string;
+  id: string; //TODO: Probably also number
   title: string;
   imdbId: string;
   isSeries: boolean;
@@ -41,14 +41,14 @@ export interface MovieStreamingInfo {
 }
 
 interface ProviderContent {
-  id: string;
+  id: number;
   provider: Provider;
   title: string;
   url: string;
 }
 
-interface Provider {
-  id: string;
+export interface Provider {
+  id: number;
   logo: string;
   name: string;
 }

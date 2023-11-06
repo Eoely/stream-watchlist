@@ -7,12 +7,14 @@
   />
 
   <button @click="$emit('completed', cheatValue)">Cheat complete</button>
+  <SelectProviders @provider-change="$emit('providerChange', $event)" />
 </template>
 
 <script setup lang="ts">
 import Papa from 'papaparse';
 import { ref } from 'vue';
 import { ImdbMovie, MovieIdentifier, MovieType } from '../types';
+import SelectProviders from './SelectProviders.vue';
 
 const cheatValue: Array<MovieIdentifier> = [
   {

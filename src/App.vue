@@ -1,15 +1,15 @@
 <template>
   <h1>Find out where to stream your movies</h1>
-
   <UploadWatchlist
     v-if="showFileUpload"
     @completed="getStreamingInfo"
     @error="setError"
+    @providerChange="selectedProviders = $event"
   />
 
   <DisplayResults
-    v-if="results.length > 0"
     :results="results"
+    :selected-provider-ids="selectedProviders"
   />
 
   <h3 v-if="loading">Loading...</h3>
@@ -27,6 +27,7 @@ const error = ref('');
 const showFileUpload = ref(true);
 const results = ref<Array<MovieStreamingInfo>>([]);
 const loading = ref(false);
+const selectedProviders = ref<Array<number>>([]);
 
 const getStreamingInfo = async (movies: Array<MovieIdentifier>) => {
   error.value = '';
