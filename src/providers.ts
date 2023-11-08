@@ -1,6 +1,5 @@
 import { Provider } from './types';
 
-//TODO: Verify if this is all providers
 export const providers: Provider[] = [
   {
     id: 16,
