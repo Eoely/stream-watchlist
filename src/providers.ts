@@ -38,6 +38,11 @@ export const providers: Provider[] = [
     name: 'HBO Max',
   },
   {
+    id: 6,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/googleplay.svg',
+    name: 'Google Play',
+  },
+  {
     id: 9,
     logo: 'https://static.filmweb.no/streamingguiden/providerlogos/TV_2_Play_logo_hvit.svg',
     name: 'TV 2 Play',
@@ -53,9 +58,33 @@ export const providers: Provider[] = [
     name: 'YouTube',
   },
   {
-    id: 6,
-    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/googleplay.svg',
-    name: 'Google Play',
+    id: 8,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/prime.svg',
+    name: 'Prime Video',
   },
-  // Duplicates are omitted in this list
+  {
+    id: 28,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/SkyShowtime_LogoHvitSmall.svg',
+    name: 'SkyShowtime',
+  },
+  {
+    id: 21,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/disney.svg',
+    name: 'Disney+',
+  },
+  {
+    id: 24,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/vega_hjemmekino.svg',
+    name: 'Vega hjemmekino',
+  },
+  {
+    id: 27,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/filmoteket-invert-rgb.svg',
+    name: 'Filmoteket',
+  },
+  {
+    id: 10,
+    logo: 'https://static.filmweb.no/streamingguiden/providerlogos/nrk.svg',
+    name: 'NRK TV',
+  },
 ];

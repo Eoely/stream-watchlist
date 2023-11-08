@@ -63,7 +63,6 @@ const props = defineProps({
 });
 
 const selectedProviders = computed(() =>
-  //TODO: Find out if there are any ids that are not in providers
   providers.filter(p => props.selectedProviderIds.includes(p.id))
 );
 </script>
